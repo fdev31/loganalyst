@@ -1,0 +1,42 @@
+[build-system]
+requires = [
+    "poetry_core>=1.0.0",
+    ]
+build-backend = "poetry.core.masonry.api"
+
+[tool.poetry]
+name = "logAnalyst"
+version = "1.0.1"
+description = "Analyse some log files"
+authors = [ "fdev31 <fdev31@gmail.com>" ]
+license = "MIT"
+#readme = "README.rst"
+#homepage = "https://github.com/fdev31/bugrest"
+classifiers = [
+        'Environment :: Console',
+        'Development Status :: 4 - Beta',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3',
+        'Programming Language :: Python :: 3.1',
+        'Programming Language :: Python :: 3.2',
+        'Programming Language :: Python :: 3.3',
+        'Programming Language :: Python :: 3.4',
+        'Programming Language :: Python :: 3.5',
+        'Programming Language :: Python :: 3.6',
+]
+
+packages = [
+    { include = "loganalyst" },
+]
+
+
+[tool.poetry.scripts]
+loga = 'loganalyst.cli:run'
+
+[tool.poetry.dependencies]
+python = ">=3.8"
+python-dateutil = "^2.8.2"
+termcolor = "^1.1.0"
+
+[tool.poetry.dev-dependencies]
+types-termcolor = "^1.1.5"
