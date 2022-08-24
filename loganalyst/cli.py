@@ -1,5 +1,6 @@
 #!/bin/env python
 
+import os
 import argparse
 import gzip
 import re
@@ -14,6 +15,7 @@ from .models import Correlator, LogLine
 from .utils import timeColor
 
 correlation_rules: list[Correlator] = []
+SEP = '-'*os.get_terminal_size()[0]
 
 
 def run() -> None:
@@ -121,15 +123,15 @@ def run() -> None:
         if args.extra:
             for e in log.extra:
                 print(f"  ... {e}")
-    print("***")
+    print(SEP)
     if args.summary:
         for cor in correlation_rules:
             cor.summary()
-        print("***")
+        print(SEP)
     if args.max:
         for cor in correlation_rules:
             summary = cor.longest.pretty if cor.longest else "None found!"
             print(f'Longest "{cor.description}" is {summary}')
-        print("***")
+        print(SEP)
     if loglines:
         print("Log period: %s - %s" % (loglines[0].localtime, loglines[-1].localtime))
