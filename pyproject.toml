@@ -41,3 +41,24 @@ tomli = "^2.0.1"
 
 [tool.poetry.dev-dependencies]
 types-termcolor = "^1.1.5"
+
+[tool.black]
+line-length = 120
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+
+[tool.mypy]
+strict = true
+plugins = "pydantic.mypy"
+warn_return_any = true
+warn_unused_configs = true
+warn_unused_ignores = true
+warn_unreachable = true
+
+[tool.vulture]
+exclude = ["tests/"]
+min_confidence = 70
+paths = ["mkrst"]
+sort_by_size = true
