@@ -57,7 +57,7 @@ def run() -> None:
         "timezone": "CEST",
         "ts_lines_prefix": "",
         "ts_lines_suffix": "",
-        "iso_regex": "(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)(:[0-5]\d(\.\d+)?)?(\+\d{4})?"
+        "iso_regex": "(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)(:[0-5]\d(\.\d+)?)?(\+\d{4})?",
     }
 
     for k, o in tomli.load(open(args.correlation_file, "rb")).items():
@@ -99,7 +99,7 @@ def run() -> None:
             entry = LogLine(
                 prefix=line[: m.end()].rstrip(),
                 timestamp=ts,
-                text=line[m.end():].rstrip(),
+                text=line[m.end() :].rstrip(),
             )
             loglines.append(entry)
             for cor in correlation_rules:
@@ -124,7 +124,7 @@ def run() -> None:
         print("***")
     if args.max:
         for cor in correlation_rules:
-            summary = cor.longest.pretty if cor.longest else 'None found!'
+            summary = cor.longest.pretty if cor.longest else "None found!"
             print(f"Longest {cor.description}: {summary}")
         print("***")
     if loglines:
