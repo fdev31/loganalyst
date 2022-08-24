@@ -124,11 +124,8 @@ def run() -> None:
         print("***")
     if args.max:
         for cor in correlation_rules:
-            print(f"Longest {cor.description}", end=": ")
-            if cor.longest:
-                print(cor.longest.duration, cor.longest.pretty)
-            else:
-                print("NONE FOUND")
+            summary = cor.longest.pretty if cor.longest else 'None found!'
+            print(f"Longest {cor.description}: {summary}")
         print("***")
     if loglines:
         print("Log period: %s - %s" % (loglines[0].localtime, loglines[-1].localtime))
