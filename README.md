@@ -13,7 +13,7 @@
 
 Note: the "loganalyst" section is a configuration, which is optional, use only in case overriding values is needed.
 
-```
+```ini
 [loganalyst]
 # patterns required before & after the ISO date to consider the log line valid
 ts_lines_prefix = ".*"
