@@ -20,4 +20,4 @@ coverage: fix
     {{venv}}/bin/vulture {{src}}
 
 test: fix
-    journalctl -b 5 -o short-iso | {{venv}}/bin/loga correlators/sample.toml - -n -max -s
+    journalctl -b 5 -o short-iso | {{venv}}/bin/loga --max -s -x correlators/sample.toml -

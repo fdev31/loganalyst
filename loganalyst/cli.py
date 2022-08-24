@@ -22,6 +22,7 @@ def run() -> None:
     parser.add_argument("correlation_file", metavar="TOML_FILE", type=str, help="correlation rules to use")
     parser.add_argument("logfile", metavar="LOG_FILE", type=str, help="(possibly gzipped) log file")
     parser.add_argument(
+        "-x",
         "--extra",
         default=False,
         type=bool,
@@ -30,6 +31,7 @@ def run() -> None:
     )
     parser.add_argument(
         "-s",
+        "--summary",
         default=False,
         type=bool,
         help="show summary",
@@ -37,20 +39,22 @@ def run() -> None:
     )
     parser.add_argument(
         "-n",
+        "--nolog",
         default=False,
         type=bool,
         help="don't show log",
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
-        "-max",
+        "-m",
+        "--max",
         default=False,
         type=bool,
         help="show max durations",
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument("-f", type=str, help="start from a date")
-    parser.add_argument("-t", type=str, help="stop to a date")
+    parser.add_argument("-b", "--begin", metavar='DATE', type=str, help="start from a date")
+    parser.add_argument("-e", "--end", metavar='DATE', type=str, help="stop to a date")
     args = parser.parse_args()
 
     config: dict[str, str] = {
@@ -77,8 +81,8 @@ def run() -> None:
         source = open(args.logfile, "rt", encoding="utf-8", errors="replace")
 
     refDateRe = re.compile(config["ts_lines_prefix"] + config["iso_regex"] + config["ts_lines_suffix"])
-    start = parse(args.f + " +00 (%s)" % config["timezone"]) if args.f else None
-    end = parse(args.t + " +00 (%s)" % config["timezone"]) if args.t else None
+    start = parse(f"{args.begin} +00 ({config['timezone']})") if args.begin else None
+    end = parse(f"{args.end} +00 ({config['timezone']})") if args.end else None
     finished = False
 
     for line in source:
@@ -108,7 +112,7 @@ def run() -> None:
             loglines[-1].extra.append(line)
 
     for log in loglines:
-        if not args.n:
+        if not args.nolog:
             pfx = ""
             if Correlator.lookup.get(log):
                 core = Correlator.lookup[log]
@@ -118,7 +122,7 @@ def run() -> None:
             for e in log.extra:
                 print(f"  ... {e}")
     print("***")
-    if args.s:
+    if args.summary:
         for cor in correlation_rules:
             cor.summary()
         print("***")
