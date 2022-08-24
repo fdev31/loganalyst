@@ -6,8 +6,11 @@ from termcolor import colored
 def extractPattern(re_match: Match[str]) -> Sequence[str] | dict[str, str]:
     d = re_match.groupdict()
     if d:
-        return d
-    return re_match.groups()
+        r = []
+        for k in sorted(d):
+            r.append("%s=%s" % (k, d[k]))
+        return ";".join(r)
+    return ";".join(re_match.groups())
 
 
 def timeColor(sec: float) -> str:
