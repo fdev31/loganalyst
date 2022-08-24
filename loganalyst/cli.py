@@ -25,7 +25,7 @@ def run() -> None:
         "--extra",
         default=False,
         type=bool,
-        help="show extra log lines (non jsapp)",
+        help="show extra log lines (not matched by iso_regex)",
         action=argparse.BooleanOptionalAction,
     )
     parser.add_argument(
