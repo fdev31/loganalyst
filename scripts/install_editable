@@ -1,0 +1,8 @@
+#!/bin/sh
+
+env="$1"
+
+[ -f "$env/lib/python3.10/site-packages/loganalyst.pth" ] && exit 0
+
+${env}/bin/pip install -U pip
+${env}/bin/pip install -e .

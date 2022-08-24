@@ -1,18 +1,20 @@
+#!/usr/bin/env just --justfile
+
 venv := ".tox/venv"
 src := "loganalyst"
 
 default:
     @just --list
 
-clean:
-    rm -fr {{venv}}/lib/python3.10/site-packages/loganalyst
+fix:
+    scripts/install_editable {{venv}}
 
-typing: clean
+typing: fix
     {{venv}}/bin/mypy  {{src}}
 
-style: clean
+style: fix
     {{venv}}/bin/isort {{src}}
     {{venv}}/bin/black {{src}}
 
-coverage: clean
+coverage: fix
     {{venv}}/bin/vulture {{src}}
