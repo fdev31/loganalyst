@@ -57,7 +57,7 @@ def run() -> None:
         "timezone": "CEST",
         "ts_lines_prefix": "",
         "ts_lines_suffix": "",
-        "iso_regex": "(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+|\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d+|\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d+)(\+\d+)?",
+        "iso_regex": "(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)(:[0-5]\d(\.\d+)?)?(\+\d{4})?"
     }
 
     for k, o in tomli.load(open(args.correlation_file, "rb")).items():
@@ -87,7 +87,7 @@ def run() -> None:
         # iso date is MUCH faster to parse, hence using an ISO ts
         m = refDateRe.match(line)
         if m:
-            ts = isoparse("".join(m.groups()))
+            ts = isoparse("".join(x for x in m.groups() if x))
 
             if start is not None:
                 if start > ts:
