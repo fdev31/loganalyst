@@ -39,7 +39,7 @@ class Correlation:
 
     @property
     def pretty(self) -> str:
-        return "%s - %s %s" % (
+        return "%s %s %s" % (
             timeColor(self.duration),
             self.start.text,
             colored("@ %s" % self.start.localtime, "blue"),

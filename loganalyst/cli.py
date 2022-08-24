@@ -97,9 +97,9 @@ def run() -> None:
                     finished = True
                     continue
             entry = LogLine(
-                prefix=line[: m.end() + 1].rstrip(),
+                prefix=line[: m.end()].rstrip(),
                 timestamp=ts,
-                text=line[m.end() + 1 :].rstrip(),
+                text=line[m.end():].rstrip(),
             )
             loglines.append(entry)
             for cor in correlation_rules:
