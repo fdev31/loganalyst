@@ -5,6 +5,7 @@ import gzip
 import re
 import sys
 from datetime import datetime, timedelta, timezone
+from typing import cast
 
 import tomli
 from dateutil.parser import isoparse, parse
@@ -88,19 +89,19 @@ class Correlator:
                 if pat not in self.items:
                     sys.stderr.write(f"Ignoring {pat} (no start found) for {self.description} on {log.prefix}\n")
                 else:
-                    if not isinstance(self.items[pat], LogLine):
-                        sys.stderr.write(f"Conflict found parsing {self.description}, pattern '{pat}' exists (dup)\n")
-                    else:
+                    if isinstance(self.items[pat], LogLine):
                         if self.verbose:
                             print(f"END of {self.description} found: {pat} => {log.text}")
                         c = Correlation(start=self.items[pat], end=log)
-                        Correlator.lookup[self.items[pat]] = c
-                        self.items[pat] = None
+                        Correlator.lookup[cast(LogLine, self.items[pat])] = c
+                        del self.items[pat]  # correlation done, free the pattern space
                         if self.longest is None:
                             self.longest = c
                         else:
                             if self.longest.duration < c.duration:
                                 self.longest = c
+                    else:
+                        sys.stderr.write(f"Conflict found parsing {self.description}, pattern '{pat}' exists (dup)\n")
 
     @property
     def valid_items(self):
