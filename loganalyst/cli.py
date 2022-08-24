@@ -4,128 +4,14 @@ import argparse
 import gzip
 import re
 import sys
-from datetime import datetime, timedelta, timezone
-from typing import Generator, Iterable, Match, Optional, Sequence, cast
+from typing import Iterable
 
 import tomli
 from dateutil.parser import isoparse, parse
-from pydantic import BaseModel
 from termcolor import colored
 
-CEST = timezone(timedelta(hours=2))
-
-
-class LogLine(BaseModel):
-    timestamp: datetime
-    prefix: str
-    text: str
-    extra: list[str] = []
-
-    @property
-    def localtime(self) -> datetime:
-        return self.timestamp.astimezone(CEST)
-
-    def __hash__(self) -> int:
-        return hash(self.timestamp.isoformat())
-
-
-def timeColor(sec: float) -> str:
-    t = "%7.03f" % sec
-    if sec < 0.4:
-        return colored(t, "grey", "on_green")
-    if sec < 1.0:
-        return colored(t, "white", "on_blue")
-    if sec < 5.0:
-        return colored(t, "red", "on_yellow")
-    return colored(t, "red", "on_yellow", attrs=["bold"])
-
-
-class Correlation:
-    def __init__(self, start: LogLine, end: LogLine):
-        self.start = start
-        self.end = end
-
-    start: LogLine
-    end: LogLine
-
-    @property
-    def duration(self) -> float:
-        return (self.end.timestamp - self.start.timestamp).total_seconds()
-
-    @property
-    def pretty(self) -> str:
-        return "%s - %s %s" % (
-            timeColor(self.duration),
-            self.start.text,
-            colored("@ %s" % self.start.localtime, "blue"),
-        )
-
-
-def extractPattern(re_match: Match[str]) -> Sequence[str] | dict[str, str]:
-    d = re_match.groupdict()
-    if d:
-        return d
-    return re_match.groups()
-
-
-class Correlator:
-    lookup: dict[LogLine, Correlation] = {}
-
-    def __init__(self, description: str, start_pat: str, end_pat: str):
-        self.description = description
-        self.start = re.compile(".*" + start_pat)
-        self.end = re.compile(".*" + end_pat)
-        self.items: dict[Sequence[str] | dict[str, str], LogLine | Correlation] = {}
-        self.done_items: dict[Sequence[str] | dict[str, str], Correlation] = {}
-        self.longest: Optional[Correlation] = None
-        self.verbose = False
-
-    def ingest(self, log: LogLine) -> None:
-        m = self.start.match(log.text)
-        if m:  # store logline if start matches
-            pat = extractPattern(m)
-            if self.verbose:
-                print(f'START of "{self.description}" found: {pat} => {log.text}')
-            self.items[pat] = log
-        else:
-            m = self.end.match(log.text)
-            if m:  # store the correlation
-                pat = extractPattern(m)
-                if pat not in self.items:
-                    sys.stderr.write(f'Warning: No matching start [{pat}] of "{self.description}" on {log.text}\n')
-                else:
-                    if isinstance(self.items[pat], LogLine):
-                        if self.verbose:
-                            print(f"END of {self.description} found: {pat} => {log.text}")
-                        ll = cast(LogLine, self.items[pat])
-                        c = Correlation(start=ll, end=log)
-                        # correlation done, free the pattern space
-                        Correlator.lookup[ll] = c
-                        self.done_items[pat] = c
-                        del self.items[pat]
-
-                        if self.longest is None:
-                            self.longest = c
-                        else:
-                            if self.longest.duration < c.duration:
-                                self.longest = c
-                    else:
-                        sys.stderr.write(
-                            f"Warning: Conflict found parsing {self.description}, pattern '{pat}' exists (dup)\n"
-                        )
-
-    @property
-    def active_items(self) -> Generator[Correlation, None, None]:
-        return (item for item in self.items.values() if isinstance(item, Correlation))
-
-    def summary(self) -> None:
-        if self.items or self.done_items:
-            print("Summary for %s:" % self.description)
-            for cor in sorted(self.done_items.values(), key=lambda x: x.start.timestamp):
-                print(cor.pretty)
-            for cor in sorted(self.active_items, key=lambda x: x.start.timestamp):
-                print(cor.pretty)
-
+from .models import Correlator, LogLine
+from .utils import timeColor
 
 correlation_rules: list[Correlator] = []
 

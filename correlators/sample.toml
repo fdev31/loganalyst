@@ -27,3 +27,7 @@ end = 'systemd\[\d+\]: Closed (.*)\.$'
 ["systemd units duration"]
 start = 'systemd\[\d+\]: Started (.*?) ?[.]+$'
 end = 'systemd\[\d+\]: Stopped (.*)\.$'
+
+["named identifier test"]
+start = 'systemd\[\d+\]: Started (?P<unit>.*?) ?[.]+$'
+end = 'systemd\[\d+\]: Stopped (?P<unit>.*)\.$'
