@@ -5,7 +5,7 @@ import gzip
 import re
 import sys
 from datetime import datetime, timedelta, timezone
-from typing import cast
+from typing import Generator, Iterable, Match, Optional, Sequence, cast
 
 import tomli
 from dateutil.parser import isoparse, parse
@@ -13,10 +13,6 @@ from pydantic import BaseModel
 from termcolor import colored
 
 CEST = timezone(timedelta(hours=2))
-
-HUMAN_RE = re.compile("(\d+)/(\d+)/(\d+)@(\d+):(\d+)")
-ISO_RE = "(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+Z)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\dZ)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\dZ)"
-jsDateRe = re.compile(".*JS - ." + ISO_RE)
 
 
 class LogLine(BaseModel):
@@ -26,14 +22,14 @@ class LogLine(BaseModel):
     extra: list[str] = []
 
     @property
-    def localtime(self):
+    def localtime(self) -> datetime:
         return self.timestamp.astimezone(CEST)
 
-    def __hash__(self):
-        return self.timestamp.second
+    def __hash__(self) -> int:
+        return hash(self.timestamp.isoformat())
 
 
-def timeColor(sec):
+def timeColor(sec: float) -> str:
     t = "%7.03f" % sec
     if sec < 0.4:
         return colored(t, "grey", "on_green")
@@ -45,7 +41,7 @@ def timeColor(sec):
 
 
 class Correlation:
-    def __init__(self, start, end):
+    def __init__(self, start: LogLine, end: LogLine):
         self.start = start
         self.end = end
 
@@ -53,11 +49,19 @@ class Correlation:
     end: LogLine
 
     @property
-    def duration(self):
+    def duration(self) -> float:
         return (self.end.timestamp - self.start.timestamp).total_seconds()
 
+    @property
+    def pretty(self) -> str:
+        return "%s - %s %s" % (
+            timeColor(self.duration),
+            self.start.text,
+            colored("@ %s" % self.start.localtime, "blue"),
+        )
 
-def extractPattern(re_match):
+
+def extractPattern(re_match: Match[str]) -> Sequence[str] | dict[str, str]:
     d = re_match.groupdict()
     if d:
         return d
@@ -67,81 +71,76 @@ def extractPattern(re_match):
 class Correlator:
     lookup: dict[LogLine, Correlation] = {}
 
-    def __init__(self, description, start_pat, end_pat):
+    def __init__(self, description: str, start_pat: str, end_pat: str):
         self.description = description
         self.start = re.compile(".*" + start_pat)
         self.end = re.compile(".*" + end_pat)
-        self.items: dict[str, LogLine | Correlation] = {}
-        self.longest = None
+        self.items: dict[Sequence[str] | dict[str, str], LogLine | Correlation] = {}
+        self.done_items: dict[Sequence[str] | dict[str, str], Correlation] = {}
+        self.longest: Optional[Correlation] = None
         self.verbose = False
 
-    def ingest(self, log: LogLine):
+    def ingest(self, log: LogLine) -> None:
         m = self.start.match(log.text)
         if m:  # store logline if start matches
             pat = extractPattern(m)
             if self.verbose:
-                print(f"START of {self.description} found: {pat} => {log.text}")
+                print(f'START of "{self.description}" found: {pat} => {log.text}')
             self.items[pat] = log
         else:
             m = self.end.match(log.text)
             if m:  # store the correlation
                 pat = extractPattern(m)
                 if pat not in self.items:
-                    sys.stderr.write(f"Ignoring {pat} (no start found) for {self.description} on {log.prefix}\n")
+                    sys.stderr.write(f'Warning: No matching start [{pat}] of "{self.description}" on {log.text}\n')
                 else:
                     if isinstance(self.items[pat], LogLine):
                         if self.verbose:
                             print(f"END of {self.description} found: {pat} => {log.text}")
-                        c = Correlation(start=self.items[pat], end=log)
-                        Correlator.lookup[cast(LogLine, self.items[pat])] = c
-                        del self.items[pat]  # correlation done, free the pattern space
+                        ll = cast(LogLine, self.items[pat])
+                        c = Correlation(start=ll, end=log)
+                        # correlation done, free the pattern space
+                        Correlator.lookup[ll] = c
+                        self.done_items[pat] = c
+                        del self.items[pat]
+
                         if self.longest is None:
                             self.longest = c
                         else:
                             if self.longest.duration < c.duration:
                                 self.longest = c
                     else:
-                        sys.stderr.write(f"Conflict found parsing {self.description}, pattern '{pat}' exists (dup)\n")
+                        sys.stderr.write(
+                            f"Warning: Conflict found parsing {self.description}, pattern '{pat}' exists (dup)\n"
+                        )
 
     @property
-    def valid_items(self):
+    def active_items(self) -> Generator[Correlation, None, None]:
         return (item for item in self.items.values() if isinstance(item, Correlation))
 
-    def summary(self):
-        if self.items:
+    def summary(self) -> None:
+        if self.items or self.done_items:
             print("Summary for %s:" % self.description)
-            for cor in sorted(self.valid_items, key=lambda x: x.start.timestamp):
-                if isinstance(cor, Correlation):
-                    print(
-                        "%s - %s %s"
-                        % (
-                            timeColor(cor.duration),
-                            cor.start.text,
-                            colored("@ %s" % cor.start.localtime, "blue"),
-                        )
-                    )
+            for cor in sorted(self.done_items.values(), key=lambda x: x.start.timestamp):
+                print(cor.pretty)
+            for cor in sorted(self.active_items, key=lambda x: x.start.timestamp):
+                print(cor.pretty)
 
 
-correlations = []
+correlation_rules: list[Correlator] = []
 
 
-def run():
+def run() -> None:
     loglines = []
     parser = argparse.ArgumentParser(description="Parse some logs.")
-    parser.add_argument("logfile", metavar="FILE", type=str, help="gzipped log file")
+    parser.add_argument("correlation_file", metavar="TOML_FILE", type=str, help="correlation rules to use")
+    parser.add_argument("logfile", metavar="LOG_FILE", type=str, help="(possibly gzipped) log file")
     parser.add_argument(
         "--extra",
         default=False,
         type=bool,
         help="show extra log lines (non jsapp)",
         action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-c",
-        type=str,
-        metavar="TOML_FILE",
-        default=None,
-        help="use a correlation file",
     )
     parser.add_argument(
         "-s",
@@ -168,27 +167,40 @@ def run():
     parser.add_argument("-t", type=str, help="stop to a date")
     args = parser.parse_args()
 
-    start = parse(args.f + " +00 (CEST)") if args.f else None
-    end = parse(args.t + " +00 (CEST)") if args.t else None
+    config: dict[str, str] = {
+        "ts_lines_prefix": ".*",
+        "ts_lines_suffix": "",
+        "iso_regex": "(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d\.\d+)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d:[0-5]\d)|(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)",
+    }
 
-    finished = False
-
-    if args.c:
-        descriptions = tomli.load(open(args.c, "rb"))
-        for k in descriptions:
-            o = descriptions[k]
+    for k, o in tomli.load(open(args.correlation_file, "rb")).items():
+        if k == "loganalyst":  # configuration section
+            config.update(o)
+        else:  # rule
             c = Correlator(k, o["start"], o["end"])
             if o.get("debug"):
                 c.verbose = True
-            correlations.append(c)
+            correlation_rules.append(c)
 
-    for line in gzip.open(args.logfile, "rt", encoding="utf-8", errors="replace"):
+    if args.logfile == "-":
+        source: Iterable[str] = sys.stdin.readlines()
+    elif args.logfile.endswith("z"):
+        source = gzip.open(args.logfile, "rt", encoding="utf-8", errors="replace")
+    else:
+        source = open(args.logfile, "rt", encoding="utf-8", errors="replace")
+
+    refDateRe = re.compile(config["ts_lines_prefix"] + config["iso_regex"] + config["ts_lines_suffix"])
+    start = parse(args.f + " +00 (%s)" % config["timezone"]) if args.f else None
+    end = parse(args.t + " +00 (%s)" % config["timezone"]) if args.t else None
+    finished = False
+
+    for line in source:
         if finished:
             break
         # iso date is MUCH faster to parse, hence using an ISO ts
-        m = jsDateRe.match(line)
+        m = refDateRe.match(line)
         if m:
-            ts = isoparse(m.groups()[0])
+            ts = isoparse(m.groups()[1])
 
             if start is not None:
                 if start > ts:
@@ -203,7 +215,7 @@ def run():
                 text=line[m.end() + 1 :].rstrip(),
             )
             loglines.append(entry)
-            for cor in correlations:
+            for cor in correlation_rules:
                 cor.ingest(entry)
         elif loglines:
             loglines[-1].extra.append(line)
@@ -212,21 +224,24 @@ def run():
         if not args.n:
             pfx = ""
             if Correlator.lookup.get(log):
-                c = Correlator.lookup.get(log)
-                pfx = timeColor(c.duration)
-            print(pfx, log.text, colored(log.timestamp, "blue"))
+                core = Correlator.lookup[log]
+                pfx = timeColor(core.duration)
+            print(pfx, log.text, colored(str(log.timestamp), "blue"))
         if args.extra:
             for e in log.extra:
                 print(f"  ... {e}")
     print("***")
     if args.s:
-        for cor in correlations:
+        for cor in correlation_rules:
             cor.summary()
         print("***")
     if args.max:
-        for cor in correlations:
-            print(cor.description)
-            print(cor.longest.duration, cor.longest.start.prefix)
+        for cor in correlation_rules:
+            print(f"Longest {cor.description}", end=": ")
+            if cor.longest:
+                print(cor.longest.duration, cor.longest.pretty)
+            else:
+                print("NONE FOUND")
         print("***")
     if loglines:
         print("Log period: %s - %s" % (loglines[0].localtime, loglines[-1].localtime))
