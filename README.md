@@ -8,6 +8,8 @@
    - show total duration
 - friendly colored output
 - able to output short summaries
+- "folding" lines
+   - keeps lines not matching an iso timestamp attached to the matching ones
 - supports gzipped files
 
 ## Usage
