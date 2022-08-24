@@ -3,6 +3,8 @@
 import argparse
 import gzip
 import re
+import sys
+import tomli
 from datetime import datetime, timedelta, timezone
 
 from dateutil.parser import isoparse, parse
@@ -53,6 +55,11 @@ class Correlation:
     def duration(self):
         return (self.end.timestamp - self.start.timestamp).total_seconds()
 
+def extractPattern(re_match):
+    d = re_match.groupdict()
+    if d:
+        return d
+    return re_match.groups()
 
 class Correlator:
     lookup: dict[LogLine, Correlation] = {}
@@ -62,25 +69,36 @@ class Correlator:
         self.start = re.compile(".*" + start_pat)
         self.end = re.compile(".*" + end_pat)
         self.items: dict[str, LogLine | Correlation] = {}
+        self.longest = None
+        self.verbose = False
 
     def ingest(self, log: LogLine):
         m = self.start.match(log.text)
         if m:  # store logline if start matches
-            pat = m.groups()[0]
+            pat = extractPattern(m)
+            if self.verbose:
+                print(f"START of {self.description} found: {pat} => {log.text}")
             self.items[pat] = log
         else:
             m = self.end.match(log.text)
             if m:  # store the correlation
-                pat = m.groups()[0]
+                pat = extractPattern(m)
                 if pat not in self.items:
-                    print(f"Ignoring {pat} (truncated)")
+                    sys.stderr.write(f"Ignoring {pat} (no start found) for {self.description} on {log.prefix}\n")
                 else:
-                    assert isinstance(
-                        self.items[pat], LogLine
-                    ), f"Conflict found for {pat}"
-                    c = Correlation(start=self.items[pat], end=log)
-                    Correlator.lookup[self.items[pat]] = c
-                    self.items[pat] = c
+                    if not isinstance(self.items[pat], LogLine):
+                        sys.stderr.write(f"Conflict found parsing {self.description}, pattern '{pat}' exists (dup)\n")
+                    else:
+                        if self.verbose:
+                            print(f"END of {self.description} found: {pat} => {log.text}")
+                        c = Correlation(start=self.items[pat], end=log)
+                        Correlator.lookup[self.items[pat]] = c
+                        self.items[pat] = None
+                        if self.longest is None:
+                            self.longest = c
+                        else:
+                            if self.longest.duration < c.duration:
+                                self.longest = c
 
     @property
     def valid_items(self):
@@ -100,18 +118,7 @@ class Correlator:
                         )
                     )
 
-
-correlations = [
-    Correlator(
-        "Websocket calls", "sendWS -> (\S+-\d+)", "sendWS -> onSuccess -> (\S+-\d+)"
-    ),
-    Correlator(
-        "Downloads",
-        "Request::download \(START\) -> (\S+)",
-        "Request::download \(FINISHED\) -> (\S+)",
-    ),
-]
-
+correlations = []
 
 def run():
     loglines = []
@@ -123,6 +130,13 @@ def run():
         type=bool,
         help="show extra log lines (non jsapp)",
         action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "-c",
+        type=str,
+        metavar="TOML_FILE",
+        default=None,
+        help="use a correlation file",
     )
     parser.add_argument(
         "-s",
@@ -138,6 +152,13 @@ def run():
         help="don't show log",
         action=argparse.BooleanOptionalAction,
     )
+    parser.add_argument(
+        "-max",
+        default=False,
+        type=bool,
+        help="show max durations",
+        action=argparse.BooleanOptionalAction,
+    )
     parser.add_argument("-f", type=str, help="start from a date")
     parser.add_argument("-t", type=str, help="stop to a date")
     args = parser.parse_args()
@@ -146,6 +167,15 @@ def run():
     end = parse(args.t + " +00 (CEST)") if args.t else None
 
     finished = False
+
+    if args.c:
+        descriptions = tomli.load(open(args.c, 'rb'))
+        for k in descriptions:
+            o = descriptions[k]
+            c = Correlator(k, o['start'], o['end'])
+            if o.get('debug'):
+                c.verbose = True
+            correlations.append(c)
 
     for line in gzip.open(args.logfile, "rt", encoding="utf-8", errors="replace"):
         if finished:
@@ -187,6 +217,11 @@ def run():
     if args.s:
         for cor in correlations:
             cor.summary()
+        print("***")
+    if args.max:
+        for cor in correlations:
+            print(cor.description)
+            print(cor.longest.duration, cor.longest.start.prefix)
         print("***")
     if loglines:
         print("Log period: %s - %s" % (loglines[0].localtime, loglines[-1].localtime))
