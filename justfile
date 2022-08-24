@@ -1,4 +1,5 @@
 #!/usr/bin/env just --justfile
+# mostly for devs: quick tests
 
 venv := ".tox/venv"
 src := "loganalyst"
