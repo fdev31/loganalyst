@@ -1,8 +1,8 @@
 #!/bin/env python
 
-import os
 import argparse
 import gzip
+import os
 import re
 import sys
 from typing import Iterable
@@ -15,7 +15,7 @@ from .models import Correlator, LogLine
 from .utils import timeColor
 
 correlation_rules: list[Correlator] = []
-SEP = '-'*os.get_terminal_size()[0]
+SEP = "-" * os.get_terminal_size()[0]
 
 
 def run() -> None:
@@ -55,8 +55,8 @@ def run() -> None:
         help="show max durations",
         action=argparse.BooleanOptionalAction,
     )
-    parser.add_argument("-b", "--begin", metavar='DATE', type=str, help="start from a date")
-    parser.add_argument("-e", "--end", metavar='DATE', type=str, help="stop to a date")
+    parser.add_argument("-b", "--begin", metavar="DATE", type=str, help="start from a date")
+    parser.add_argument("-e", "--end", metavar="DATE", type=str, help="stop to a date")
     args = parser.parse_args()
 
     config: dict[str, str] = {
