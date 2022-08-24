@@ -4,9 +4,9 @@ import argparse
 import gzip
 import re
 import sys
-import tomli
 from datetime import datetime, timedelta, timezone
 
+import tomli
 from dateutil.parser import isoparse, parse
 from pydantic import BaseModel
 from termcolor import colored
@@ -55,11 +55,13 @@ class Correlation:
     def duration(self):
         return (self.end.timestamp - self.start.timestamp).total_seconds()
 
+
 def extractPattern(re_match):
     d = re_match.groupdict()
     if d:
         return d
     return re_match.groups()
+
 
 class Correlator:
     lookup: dict[LogLine, Correlation] = {}
@@ -118,7 +120,9 @@ class Correlator:
                         )
                     )
 
+
 correlations = []
+
 
 def run():
     loglines = []
@@ -169,11 +173,11 @@ def run():
     finished = False
 
     if args.c:
-        descriptions = tomli.load(open(args.c, 'rb'))
+        descriptions = tomli.load(open(args.c, "rb"))
         for k in descriptions:
             o = descriptions[k]
-            c = Correlator(k, o['start'], o['end'])
-            if o.get('debug'):
+            c = Correlator(k, o["start"], o["end"])
+            if o.get("debug"):
                 c.verbose = True
             correlations.append(c)
 
