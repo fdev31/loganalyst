@@ -15,7 +15,7 @@
 For instance, with systemd logs:
 
 ```
-journalctl -b 5 -o short-iso | loga -s correlators/sample.toml
+journalctl -b 5 -o short-iso | loga -s correlators/sample.toml -
 ```
 
 ## Sample correlation
