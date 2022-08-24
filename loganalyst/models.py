@@ -57,10 +57,13 @@ class Correlator:
         self.done_items: dict[Sequence[str] | dict[str, str], Correlation] = {}
         self.longest: Optional[Correlation] = None
         self.verbose = False
+        self.count_started = 0
+        self.count_done = 0
 
     def ingest(self, log: LogLine) -> None:
         m = self.start.match(log.text)
         if m:  # store logline if start matches
+            self.count_started += 1
             pat = extractPattern(m)
             if self.verbose:
                 print(f'START of "{self.description}" found: {pat} => {log.text}')
@@ -72,6 +75,7 @@ class Correlator:
                 if pat not in self.items:
                     sys.stderr.write(f'Warning: No matching start [{pat}] of "{self.description}" on {log.text}\n')
                 else:
+                    self.count_done += 1
                     if isinstance(self.items[pat], LogLine):
                         if self.verbose:
                             print(f"END of {self.description} found: {pat} => {log.text}")
@@ -98,7 +102,13 @@ class Correlator:
 
     def summary(self) -> None:
         if self.items or self.done_items:
-            print("Summary for %s:" % self.description)
+            print(
+                colored(
+                    "Summary for %s (%d/%d):" % (self.description, self.count_done, self.count_started),
+                    "white",
+                    "on_blue",
+                )
+            )
             for cor in sorted(self.done_items.values(), key=lambda x: x.start.timestamp):
                 print(cor.pretty)
             for cor in sorted(self.active_items, key=lambda x: x.start.timestamp):
