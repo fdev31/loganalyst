@@ -83,8 +83,12 @@ def run() -> None:
         source = open(args.logfile, "rt", encoding="utf-8", errors="replace")
 
     refDateRe = re.compile(config["ts_lines_prefix"] + config["iso_regex"] + config["ts_lines_suffix"])
-    start = parse(f"{args.begin} +00 ({config['timezone']})") if args.begin else None
-    end = parse(f"{args.end} +00 ({config['timezone']})") if args.end else None
+    if config['timezone']:
+        start = parse(f"{args.begin} +00 ({config['timezone']})") if args.begin else None
+        end = parse(f"{args.end} +00 ({config['timezone']})") if args.end else None
+    else:
+        start = parse(args.begin) if args.begin else None
+        end = parse(args.end) if args.end else None
     finished = False
 
     for line in source:
