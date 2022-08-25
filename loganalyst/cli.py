@@ -81,7 +81,7 @@ def run() -> None:
                 correlation_rules.append(c)
 
     if args.logfile == "-":
-        source: Iterable[str] = sys.stdin.readlines()
+        source: Iterable[str] = sys.stdin
     elif args.logfile.endswith("z"):
         source = gzip.open(args.logfile, "rt", encoding="utf-8", errors="replace")
     else:
