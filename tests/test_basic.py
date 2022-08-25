@@ -1,6 +1,7 @@
+import pytest
+
 from loganalyst.cli import run
 from loganalyst.options import CLIOptions
-import pytest
 
 
 def test_args():
