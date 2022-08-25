@@ -7,6 +7,8 @@ src := "loganalyst"
 default:
     @just --list
 
+do: typing style coverage test
+
 fix:
     scripts/install_editable {{venv}}
 
@@ -14,8 +16,8 @@ typing: fix
     {{venv}}/bin/mypy  {{src}}
 
 style: fix
-    {{venv}}/bin/isort {{src}}
-    {{venv}}/bin/black {{src}}
+    {{venv}}/bin/isort .
+    {{venv}}/bin/black .
 
 coverage: fix
     {{venv}}/bin/vulture {{src}}
