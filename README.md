@@ -15,26 +15,23 @@
 ## Usage
 
 ```
-usage: loga [-h] [-x | --extra | --no-extra] [-s | --summary | --no-summary] [-n | --nolog | --no-nolog] [-m | --max | --no-max] [-b DATE] [-e DATE] TOML_FILE LOG_FILE
-
-Parse some logs.
+usage: loga [--extra] [--summary] [--nolog] [--max] [-b DATE] [-e DATE] [-h]
+            TOML_FILE LOG_FILE
 
 positional arguments:
-  TOML_FILE             correlation rules to use
-  LOG_FILE              (possibly gzipped) log file
+  TOML_FILE             (Path, default=None) correlation rules to use
+  LOG_FILE              (Path, default=None) (possibly gzipped) log file
 
 options:
-  -h, --help            show this help message and exit
-  -x, --extra, --no-extra
-                        show extra log lines (not matched by iso_regex) (default: False)
-  -s, --summary, --no-summary
-                        show summary (default: False)
-  -n, --nolog, --no-nolog
-                        don't show log (default: False)
-  -m, --max, --no-max   show max durations (default: False)
+  --extra               (bool, default=False) show extra log lines (not
+                        matched by iso_regex)
+  --summary             (bool, default=False) show summary
+  --nolog               (bool, default=False) don't show log
+  --max                 (bool, default=False) show max durations
   -b DATE, --begin DATE
-                        start from a date
-  -e DATE, --end DATE   stop to a date
+                        (Optional[str], default=None) start from a date
+  -e DATE, --end DATE   (Optional[str], default=None) stop to a date
+  -h, --help            show this help message and exit
 ```
 
 For instance, with systemd logs:

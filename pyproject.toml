@@ -39,6 +39,7 @@ python-dateutil = "^2.8.2"
 termcolor = "^1.1.0"
 tomli = "^2.0.1"
 pydantic = "^1.9.2"
+typed-argument-parser = "^1.7.2"
 
 [tool.poetry.dev-dependencies]
 types-termcolor = "^1.1.5"

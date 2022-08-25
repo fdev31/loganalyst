@@ -1,4 +1,12 @@
 [[package]]
+name = "mypy-extensions"
+version = "0.4.3"
+description = "Experimental type system extensions for programs checked with the mypy typechecker."
+category = "main"
+optional = false
+python-versions = "*"
+
+[[package]]
 name = "pydantic"
 version = "1.9.2"
 description = "Data validation and settings management using python type hints"
@@ -49,6 +57,18 @@ optional = false
 python-versions = ">=3.7"
 
 [[package]]
+name = "typed-argument-parser"
+version = "1.7.2"
+description = "Typed Argument Parser"
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+typing_extensions = ">=3.7.4"
+typing-inspect = ">=0.7.1"
+
+[[package]]
 name = "types-termcolor"
 version = "1.1.5"
 description = "Typing stubs for termcolor"
@@ -64,12 +84,28 @@ category = "main"
 optional = false
 python-versions = ">=3.7"
 
+[[package]]
+name = "typing-inspect"
+version = "0.8.0"
+description = "Runtime inspection utilities for typing module."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+mypy-extensions = ">=0.3.0"
+typing-extensions = ">=3.7.4"
+
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.8"
-content-hash = "d837702d50a2ace100c795d930d9ea880a508a540666ab1d9bc1f5bdb7f407f1"
+content-hash = "72d547f74e8a462bfa71bef769d6560c58435e7390057abee2c59003ebfe6add"
 
 [metadata.files]
+mypy-extensions = [
+    {file = "mypy_extensions-0.4.3-py2.py3-none-any.whl", hash = "sha256:090fedd75945a69ae91ce1303b5824f428daf5a028d2f6ab8a299250a846f15d"},
+    {file = "mypy_extensions-0.4.3.tar.gz", hash = "sha256:2d82818f5bb3e369420cb3c4060a7970edba416647068eb4c5343488a6c604a8"},
+]
 pydantic = [
     {file = "pydantic-1.9.2-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9c9e04a6cdb7a363d7cb3ccf0efea51e0abb48e180c0d31dca8d247967d85c6e"},
     {file = "pydantic-1.9.2-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:fafe841be1103f340a24977f61dee76172e4ae5f647ab9e7fd1e1fca51524f08"},
@@ -122,6 +158,9 @@ tomli = [
     {file = "tomli-2.0.1-py3-none-any.whl", hash = "sha256:939de3e7a6161af0c887ef91b7d41a53e7c5a1ca976325f429cb46ea9bc30ecc"},
     {file = "tomli-2.0.1.tar.gz", hash = "sha256:de526c12914f0c550d15924c62d72abc48d6fe7364aa87328337a31007fe8a4f"},
 ]
+typed-argument-parser = [
+    {file = "typed-argument-parser-1.7.2.tar.gz", hash = "sha256:4e44bc79010391cd9dec4b110e1474fedc8919138e93ca91222ea6b3b360daee"},
+]
 types-termcolor = [
     {file = "types-termcolor-1.1.5.tar.gz", hash = "sha256:dd10b878548dbd72885f72c1c45d42a45172634f7c8d0284559238785604e068"},
     {file = "types_termcolor-1.1.5-py3-none-any.whl", hash = "sha256:3dc714e884a98b6a8c4c6af22ee99e1b53d2e595a22e0933b2dc9cc32b8b8c58"},
@@ -129,4 +168,8 @@ types-termcolor = [
 typing-extensions = [
     {file = "typing_extensions-4.3.0-py3-none-any.whl", hash = "sha256:25642c956049920a5aa49edcdd6ab1e06d7e5d467fc00e0506c44ac86fbfca02"},
     {file = "typing_extensions-4.3.0.tar.gz", hash = "sha256:e6d2677a32f47fc7eb2795db1dd15c1f34eff616bcaf2cfb5e997f854fa1c4a6"},
+]
+typing-inspect = [
+    {file = "typing_inspect-0.8.0-py3-none-any.whl", hash = "sha256:5fbf9c1e65d4fa01e701fe12a5bca6c6e08a4ffd5bc60bfac028253a447c5188"},
+    {file = "typing_inspect-0.8.0.tar.gz", hash = "sha256:8b1ff0c400943b6145df8119c41c244ca8207f1f10c9c057aeed1560e4806e3d"},
 ]

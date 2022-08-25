@@ -1,6 +1,5 @@
 #!/bin/env python
 
-import argparse
 import gzip
 import os
 import re
@@ -12,6 +11,7 @@ from dateutil.parser import isoparse, parse
 from termcolor import colored
 
 from .models import Correlator, LogLine
+from .options import CLIOptions
 from .utils import timeColor
 
 correlation_rules: list[Correlator] = []
@@ -23,7 +23,7 @@ except OSError:
 SEP = "-" * twidth
 
 
-def run(args) -> None:
+def run(args: CLIOptions) -> None:
     loglines = []
 
     config: dict[str, str] = {
@@ -33,7 +33,7 @@ def run(args) -> None:
         "iso_regex": "(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(\.\d+)?((?:[+-]\d\d:?\d\d)|Z)?",
     }
 
-    for k, o in tomli.load(open(args.correlation_file, "rb")).items():
+    for k, o in tomli.load(open(str(args.correlation_file), "rb")).items():
         if k == "loganalyst":  # configuration section
             config.update(o)
         else:  # rule
@@ -42,12 +42,13 @@ def run(args) -> None:
                 c.verbose = o.get("debug", False)
                 correlation_rules.append(c)
 
-    if args.logfile == "-":
+    logfile = str(args.logfile)
+    if logfile == "-":
         source: Iterable[str] = sys.stdin
-    elif args.logfile.endswith("z"):
-        source = gzip.open(args.logfile, "rt", encoding="utf-8", errors="replace")
+    elif logfile.endswith("z"):
+        source = gzip.open(logfile, "rt", encoding="utf-8", errors="replace")
     else:
-        source = open(args.logfile, "rt", encoding="utf-8", errors="replace")
+        source = open(logfile, "rt", encoding="utf-8", errors="replace")
 
     refDateRe = re.compile(config["ts_lines_prefix"] + config["iso_regex"] + config["ts_lines_suffix"])
     if config["timezone"]:
@@ -111,42 +112,5 @@ def run(args) -> None:
 
 
 def cli() -> None:
-    parser = argparse.ArgumentParser(description="Parse some logs.")
-    parser.add_argument("correlation_file", metavar="TOML_FILE", type=str, help="correlation rules to use")
-    parser.add_argument("logfile", metavar="LOG_FILE", type=str, help="(possibly gzipped) log file")
-    parser.add_argument(
-        "-x",
-        "--extra",
-        default=False,
-        type=bool,
-        help="show extra log lines (not matched by iso_regex)",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-s",
-        "--summary",
-        default=False,
-        type=bool,
-        help="show summary",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-n",
-        "--nolog",
-        default=False,
-        type=bool,
-        help="don't show log",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-m",
-        "--max",
-        default=False,
-        type=bool,
-        help="show max durations",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument("-b", "--begin", metavar="DATE", type=str, help="start from a date")
-    parser.add_argument("-e", "--end", metavar="DATE", type=str, help="stop to a date")
-    args = parser.parse_args()
+    args = CLIOptions().parse_args()
     run(args)
