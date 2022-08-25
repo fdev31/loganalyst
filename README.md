@@ -15,22 +15,26 @@
 ## Usage
 
 ```
-usage: loga [-h] [--extra | --no-extra] [-s] [-n] [-max] [-f F] [-t T] TOML_FILE LOG_FILE
+usage: loga [-h] [-x | --extra | --no-extra] [-s | --summary | --no-summary] [-n | --nolog | --no-nolog] [-m | --max | --no-max] [-b DATE] [-e DATE] TOML_FILE LOG_FILE
 
 Parse some logs.
 
 positional arguments:
-  TOML_FILE            correlation rules to use
-  LOG_FILE             (possibly gzipped) log file
+  TOML_FILE             correlation rules to use
+  LOG_FILE              (possibly gzipped) log file
 
 options:
-  -h, --help           show this help message and exit
-  --extra, --no-extra  show extra log lines (not matched by iso_regex) (default: False)
-  -s                   show summary (default: False)
-  -n                   don't show log (default: False)
-  -max                 show max durations (default: False)
-  -f F                 start from a date
-  -t T                 stop to a date
+  -h, --help            show this help message and exit
+  -x, --extra, --no-extra
+                        show extra log lines (not matched by iso_regex) (default: False)
+  -s, --summary, --no-summary
+                        show summary (default: False)
+  -n, --nolog, --no-nolog
+                        don't show log (default: False)
+  -m, --max, --no-max   show max durations (default: False)
+  -b DATE, --begin DATE
+                        start from a date
+  -e DATE, --end DATE   stop to a date
 ```
 
 For instance, with systemd logs:
