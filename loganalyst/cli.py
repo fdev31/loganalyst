@@ -96,6 +96,7 @@ def run() -> None:
         end = parse(args.end) if args.end else None
     finished = False
 
+    # build the data set
     for line in source:
         if finished:
             break
@@ -122,6 +123,7 @@ def run() -> None:
         elif loglines:
             loglines[-1].extra.append(line)
 
+    # output
     for log in loglines:
         if not args.nolog:
             pfx = ""
