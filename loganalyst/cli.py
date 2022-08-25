@@ -141,7 +141,7 @@ def run() -> None:
         print(SEP)
     if args.max:
         for cor in correlation_rules:
-            summary = cor.longest.pretty if cor.longest else "None found!"
+            summary = cor.longest.pretty if cor.longest else "not found!"
             print(f'Longest "{cor.description}" is {summary}')
         print(SEP)
     if loglines:
