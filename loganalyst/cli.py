@@ -15,7 +15,12 @@ from .models import Correlator, LogLine
 from .utils import timeColor
 
 correlation_rules: list[Correlator] = []
-SEP = "-" * os.get_terminal_size()[0]
+try:
+    twidth = os.get_terminal_size()[0]
+except OSError:
+    twidth = 80
+
+SEP = "-" * twidth
 
 
 def run() -> None:
