@@ -23,46 +23,8 @@ except OSError:
 SEP = "-" * twidth
 
 
-def run() -> None:
+def run(args) -> None:
     loglines = []
-    parser = argparse.ArgumentParser(description="Parse some logs.")
-    parser.add_argument("correlation_file", metavar="TOML_FILE", type=str, help="correlation rules to use")
-    parser.add_argument("logfile", metavar="LOG_FILE", type=str, help="(possibly gzipped) log file")
-    parser.add_argument(
-        "-x",
-        "--extra",
-        default=False,
-        type=bool,
-        help="show extra log lines (not matched by iso_regex)",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-s",
-        "--summary",
-        default=False,
-        type=bool,
-        help="show summary",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-n",
-        "--nolog",
-        default=False,
-        type=bool,
-        help="don't show log",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument(
-        "-m",
-        "--max",
-        default=False,
-        type=bool,
-        help="show max durations",
-        action=argparse.BooleanOptionalAction,
-    )
-    parser.add_argument("-b", "--begin", metavar="DATE", type=str, help="start from a date")
-    parser.add_argument("-e", "--end", metavar="DATE", type=str, help="stop to a date")
-    args = parser.parse_args()
 
     config: dict[str, str] = {
         "timezone": "CEST",
@@ -146,3 +108,45 @@ def run() -> None:
         print(SEP)
     if loglines:
         print("Log period: %s - %s" % (loglines[0].localtime, loglines[-1].localtime))
+
+
+def cli() -> None:
+    parser = argparse.ArgumentParser(description="Parse some logs.")
+    parser.add_argument("correlation_file", metavar="TOML_FILE", type=str, help="correlation rules to use")
+    parser.add_argument("logfile", metavar="LOG_FILE", type=str, help="(possibly gzipped) log file")
+    parser.add_argument(
+        "-x",
+        "--extra",
+        default=False,
+        type=bool,
+        help="show extra log lines (not matched by iso_regex)",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "-s",
+        "--summary",
+        default=False,
+        type=bool,
+        help="show summary",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "-n",
+        "--nolog",
+        default=False,
+        type=bool,
+        help="don't show log",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument(
+        "-m",
+        "--max",
+        default=False,
+        type=bool,
+        help="show max durations",
+        action=argparse.BooleanOptionalAction,
+    )
+    parser.add_argument("-b", "--begin", metavar="DATE", type=str, help="start from a date")
+    parser.add_argument("-e", "--end", metavar="DATE", type=str, help="stop to a date")
+    args = parser.parse_args()
+    run(args)
