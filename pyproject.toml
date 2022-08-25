@@ -6,7 +6,7 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry]
 name = "logAnalyst"
-version = "1.0.9"
+version = "1.0.10"
 description = "Analyse some log files"
 authors = [ "fdev31 <fdev31@gmail.com>" ]
 license = "MIT"
