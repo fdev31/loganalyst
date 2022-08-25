@@ -27,6 +27,8 @@ end = 'systemd\[\d+\]: Closed (.*)\.$'
 ["systemd units duration"]
 start = 'systemd\[\d+\]: Started (.*?) ?[.]+$'
 end = 'systemd\[\d+\]: Stopped (.*)\.$'
+# You can skip some correlation rule by setting this attribute to false:
+enable = false
 
 ["named identifier test"]
 start = 'systemd\[\d+\]: Started (?P<unit>.*?) ?[.]+$'

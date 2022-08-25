@@ -75,10 +75,10 @@ def run() -> None:
         if k == "loganalyst":  # configuration section
             config.update(o)
         else:  # rule
-            c = Correlator(k, o["start"], o["end"])
-            if o.get("debug"):
-                c.verbose = True
-            correlation_rules.append(c)
+            if o.get("enable", True):
+                c = Correlator(k, o["start"], o["end"])
+                c.verbose = o.get("debug", False)
+                correlation_rules.append(c)
 
     if args.logfile == "-":
         source: Iterable[str] = sys.stdin.readlines()
