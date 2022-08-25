@@ -3,7 +3,7 @@
 ts_lines_prefix = ""
 ts_lines_suffix = ""
 # What will be searched for in each line to extract the ISO date
-iso_regex = '(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)(:[0-5]\d(\.\d+)?)?(\+\d{4})?'
+#iso_regex = '(\d{4}-[01]\d-[0-3]\dT[0-2]\d:[0-5]\d)(:[0-5]\d(\.\d+)?)?(\+\d{4})?'
 # timezone used in dates input by the user
 timezone = "CEST"
 
