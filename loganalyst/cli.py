@@ -68,7 +68,7 @@ def run() -> None:
         "timezone": "CEST",
         "ts_lines_prefix": "",
         "ts_lines_suffix": "",
-        "iso_regex": '(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(\.\d+)?(([+-]\d\d:\d\d)|Z)?'
+        "iso_regex": "(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(\.\d+)?((?:[+-]\d\d:?\d\d)|Z)?",
     }
 
     for k, o in tomli.load(open(args.correlation_file, "rb")).items():
@@ -88,7 +88,7 @@ def run() -> None:
         source = open(args.logfile, "rt", encoding="utf-8", errors="replace")
 
     refDateRe = re.compile(config["ts_lines_prefix"] + config["iso_regex"] + config["ts_lines_suffix"])
-    if config['timezone']:
+    if config["timezone"]:
         start = parse(f"{args.begin} +00 ({config['timezone']})") if args.begin else None
         end = parse(f"{args.end} +00 ({config['timezone']})") if args.end else None
     else:
