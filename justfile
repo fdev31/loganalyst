@@ -22,6 +22,7 @@ coverage: fix
 
 test: fix
     journalctl -b 5 -o short-iso | {{venv}}/bin/loga --max --summary --extra correlators/sample.toml -
+    {{venv}}/bin/pytest tests/
 
 help: fix
     {{venv}}/bin/loga -h

@@ -1,0 +1,15 @@
+[loganalyst]
+ts_lines_prefix = '\[XXX\] '
+
+["Basic pattern-less correlation"]
+start = "starting (.*)"
+end = "stopping (.*)"
+
+["Correlation using a pattern"]
+start = 'start of (?P<unit>.*?) from (?P<host>\S+)'
+end = '(?P<host>\S+?) stopped (?P<unit>.*)'
+
+["Not enabled"]
+start = '(.*)'
+end = '(.*)'
+enable = false
