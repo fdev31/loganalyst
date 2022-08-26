@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import re
 import sys
 from datetime import datetime, timedelta, timezone
@@ -26,9 +28,10 @@ class LogLine(BaseModel):
 
 
 class Correlation:
-    def __init__(self, start: LogLine, end: LogLine):
+    def __init__(self, start: LogLine, end: LogLine, source: Correlator):
         self.start = start
         self.end = end
+        self.src = source
 
     start: LogLine
     end: LogLine
@@ -80,7 +83,7 @@ class Correlator:
                         if self.verbose:
                             print(f"END of {self.description} found: {pat} => {log.text}")
                         start = cast(LogLine, self.items[pat])
-                        c = Correlation(start=start, end=log)
+                        c = Correlation(start=start, end=log, source=self)
                         # correlation done, free the pattern space
                         Correlator.lookup[start] = c
                         self.done_items.append(c)

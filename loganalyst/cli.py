@@ -90,10 +90,12 @@ def run(args: CLIOptions) -> None:
     for log in loglines:
         if not args.nolog:
             pfx = ""
+            sfx = ""
             if Correlator.lookup.get(log):
                 core = Correlator.lookup[log]
                 pfx = timeColor(core.duration)
-            print(pfx, log.text, colored(str(log.timestamp), "blue"))
+                sfx = colored(core.src.description, "yellow")
+            print(pfx, log.text, colored(str(log.timestamp), "blue"), sfx)
         if args.extra:
             for e in log.extra:
                 print(f"  ... {e}")
