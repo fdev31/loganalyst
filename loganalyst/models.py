@@ -79,10 +79,10 @@ class Correlator:
                     if isinstance(self.items[pat], LogLine):
                         if self.verbose:
                             print(f"END of {self.description} found: {pat} => {log.text}")
-                        ll = cast(LogLine, self.items[pat])
-                        c = Correlation(start=ll, end=log)
+                        start = cast(LogLine, self.items[pat])
+                        c = Correlation(start=start, end=log)
                         # correlation done, free the pattern space
-                        Correlator.lookup[ll] = c
+                        Correlator.lookup[start] = c
                         self.done_items.append(c)
                         del self.items[pat]
 
