@@ -54,7 +54,7 @@ class Correlator:
         self.start = re.compile(".*" + start_pat)
         self.end = re.compile(".*" + end_pat)
         self.items: dict[Sequence[str] | dict[str, str], LogLine | Correlation] = {}
-        self.done_items: dict[Sequence[str] | dict[str, str], Correlation] = {}
+        self.done_items: list[Correlation] = []
         self.longest: Optional[Correlation] = None
         self.verbose = False
         self.count_started = 0
@@ -83,7 +83,7 @@ class Correlator:
                         c = Correlation(start=ll, end=log)
                         # correlation done, free the pattern space
                         Correlator.lookup[ll] = c
-                        self.done_items[pat] = c
+                        self.done_items.append(c)
                         del self.items[pat]
 
                         if self.longest is None:
@@ -109,7 +109,7 @@ class Correlator:
                     "on_blue",
                 )
             )
-            for cor in sorted(self.done_items.values(), key=lambda x: x.start.timestamp):
+            for cor in sorted(self.done_items, key=lambda x: x.start.timestamp):
                 print(cor.pretty)
             for cor in sorted(self.active_items, key=lambda x: x.start.timestamp):
                 print(cor.pretty)
