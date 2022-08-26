@@ -4,7 +4,7 @@ import gzip
 import os
 import re
 import sys
-from typing import Iterable
+from typing import Dict, Iterable, List
 
 import tomli
 from dateutil.parser import isoparse, parse
@@ -14,7 +14,7 @@ from .models import Correlator, LogLine
 from .options import CLIOptions
 from .utils import timeColor
 
-correlation_rules: list[Correlator] = []
+correlation_rules: List[Correlator] = []
 try:
     twidth = os.get_terminal_size()[0]
 except OSError:
@@ -26,11 +26,11 @@ SEP = "-" * twidth
 def run(args: CLIOptions) -> None:
     loglines = []
 
-    config: dict[str, str] = {
+    config: Dict[str, str] = {
         "timezone": "CEST",
         "ts_lines_prefix": "",
         "ts_lines_suffix": "",
-        "iso_regex": "(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(\.\d+)?((?:[+-]\d\d:?\d\d)|Z)?",
+        "iso_regex": r"(\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d)(\.\d+)?((?:[+-]\d\d:?\d\d)|Z)?",
     }
 
     for k, o in tomli.load(open(str(args.correlation_file), "rb")).items():

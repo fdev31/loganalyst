@@ -3,9 +3,8 @@ from __future__ import annotations
 import re
 import sys
 from datetime import datetime, timedelta, timezone
-from typing import Generator, Optional, Sequence, cast
+from typing import Dict, Generator, Optional, Sequence, Union, cast
 
-from pydantic import BaseModel
 from termcolor import colored
 
 from .utils import extractPattern, timeColor
@@ -13,11 +12,16 @@ from .utils import extractPattern, timeColor
 CEST = timezone(timedelta(hours=2))
 
 
-class LogLine(BaseModel):
+class LogLine:
     timestamp: datetime
     prefix: str
     text: str
     extra: list[str] = []
+
+    def __init__(self, prefix: str, timestamp: datetime, text: str):
+        self.text = text
+        self.timestamp = timestamp
+        self.prefix = prefix
 
     @property
     def localtime(self) -> datetime:
@@ -56,7 +60,7 @@ class Correlator:
         self.description = description
         self.start = re.compile(".*" + start_pat)
         self.end = re.compile(".*" + end_pat)
-        self.items: dict[Sequence[str] | dict[str, str], LogLine | Correlation] = {}
+        self.items: Dict[Union[Sequence[str], Dict[str, str]], Union[LogLine, Correlation]] = {}
         self.done_items: list[Correlation] = []
         self.longest: Optional[Correlation] = None
         self.verbose = False

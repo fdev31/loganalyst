@@ -1,9 +1,9 @@
-from typing import Match, Sequence
+from typing import Dict, Match, Sequence
 
 from termcolor import colored
 
 
-def extractPattern(re_match: Match[str]) -> Sequence[str] | dict[str, str]:
+def extractPattern(re_match: Match[str]) -> str:
     d = re_match.groupdict()
     if d:
         r = []
