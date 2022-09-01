@@ -66,11 +66,15 @@ class Correlator:
         self.verbose = False
         self.count_started = 0
         self.count_done = 0
+        self.ongoing_correlations = 0
+        self.max_ongoing = 0
 
     def ingest(self, log: LogLine) -> None:
         m = self.start.match(log.text)
         if m:  # store logline if start matches
             self.count_started += 1
+            self.ongoing_correlations += 1
+            self.max_ongoing = max(self.ongoing_correlations, self.max_ongoing)
             pat = extractPattern(m)
             if self.verbose:
                 print(f'START of "{self.description}" found: {pat} => {log.text}')
@@ -83,6 +87,7 @@ class Correlator:
                     sys.stderr.write(f'Warning: No matching start [{pat}] of "{self.description}" on {log.text}\n')
                 else:
                     self.count_done += 1
+                    self.ongoing_correlations -= 1
                     if isinstance(self.items[pat], LogLine):
                         if self.verbose:
                             print(f"END of {self.description} found: {pat} => {log.text}")
@@ -111,7 +116,8 @@ class Correlator:
         if self.items or self.done_items:
             print(
                 colored(
-                    "Summary for %s (%d/%d):" % (self.description, self.count_done, self.count_started),
+                    "Summary for %s (%d/%d, max running: %d):"
+                    % (self.description, self.count_done, self.count_started, self.max_ongoing),
                     "white",
                     "on_blue",
                 )
