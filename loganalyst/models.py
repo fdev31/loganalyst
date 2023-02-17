@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import re
 import sys
+import zoneinfo
 from datetime import datetime, timedelta, timezone
 from typing import Dict, Generator, Optional, Sequence, Union, cast, Any
 
@@ -9,7 +10,7 @@ from termcolor import colored
 
 from .utils import extractPattern, timeColor
 
-CEST = timezone(timedelta(hours=2))
+CEST = timezone(datetime.now(zoneinfo.ZoneInfo('Europe/London')).utcoffset() or timedelta(0))
 
 class LogLine:
     timestamp: datetime
@@ -60,7 +61,7 @@ class Correlation:
         return "%s %s %s" % (
             timeColor(self.duration),
             self.start.text,
-            colored("@ %s" % self.start.localtime, "blue"),
+            colored("@ %s" % self.start.timestamp, "blue"),
         )
 
 
