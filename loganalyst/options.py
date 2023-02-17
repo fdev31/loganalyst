@@ -5,7 +5,6 @@ from tap import Tap
 
 
 class CLIOptions(Tap):
-
     correlation_file: Path  # correlation rules to use
     logfile: Path  # (possibly gzipped) log file
     extra: bool = False  # show extra log lines (not matched by iso_regex)

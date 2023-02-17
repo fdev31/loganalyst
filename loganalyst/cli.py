@@ -10,11 +10,12 @@ import tomli
 from dateutil.parser import isoparse, parse
 from termcolor import colored
 
-from .models import Correlator, LogLine
+from .models import CheckPointEvent, Correlator, LogLine
+from .models import event_rules, correlation_rules, lineFactory
+
 from .options import CLIOptions
 from .utils import timeColor
 
-correlation_rules: List[Correlator] = []
 try:
     twidth = os.get_terminal_size()[0]
 except OSError:
@@ -38,9 +39,7 @@ def run(args: CLIOptions) -> None:
             config.update(o)
         else:  # rule
             if o.get("enable", True):
-                c = Correlator(k, o["start"], o["end"])
-                c.verbose = o.get("debug", False)
-                correlation_rules.append(c)
+                lineFactory(k, o)
 
     logfile = str(args.logfile)
     if logfile == "-":
@@ -83,6 +82,8 @@ def run(args: CLIOptions) -> None:
             loglines.append(entry)
             for cor in correlation_rules:
                 cor.ingest(entry)
+            for evt in event_rules:
+                evt.ingest(entry)
         elif loglines:
             loglines[-1].extra.append(line)
 
@@ -95,6 +96,12 @@ def run(args: CLIOptions) -> None:
                 core = Correlator.lookup[log]
                 pfx = timeColor(core.duration)
                 sfx = colored(core.src.description, "yellow")
+            if CheckPointEvent.lookup.get(log):
+                evt = CheckPointEvent.lookup[log]
+                if sfx:
+                    sfx += " + " + colored(evt.description, "yellow")
+                else:
+                    sfx = colored(evt.description, "yellow")
             print(pfx, log.text, colored(str(log.timestamp), "blue"), sfx)
         if args.extra:
             for e in log.extra:
@@ -103,6 +110,10 @@ def run(args: CLIOptions) -> None:
     if args.summary:
         for cor in correlation_rules:
             cor.summary()
+        if event_rules and correlation_rules:
+            print("events:")
+        for evt in event_rules:
+            evt.summary()
         print(SEP)
     if args.max:
         for cor in correlation_rules:

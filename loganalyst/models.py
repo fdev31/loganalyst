@@ -3,7 +3,7 @@ from __future__ import annotations
 import re
 import sys
 from datetime import datetime, timedelta, timezone
-from typing import Dict, Generator, Optional, Sequence, Union, cast
+from typing import Dict, Generator, Optional, Sequence, Union, cast, Any
 
 from termcolor import colored
 
@@ -11,14 +11,14 @@ from .utils import extractPattern, timeColor
 
 CEST = timezone(timedelta(hours=2))
 
-
 class LogLine:
     timestamp: datetime
     prefix: str
     text: str
-    extra: list[str] = []
+    extra: list[str]
 
     def __init__(self, prefix: str, timestamp: datetime, text: str):
+        self.extra = []
         self.text = text
         self.timestamp = timestamp
         self.prefix = prefix
@@ -30,6 +30,17 @@ class LogLine:
     def __hash__(self) -> int:
         return hash(self.timestamp.isoformat())
 
+def lineFactory(name: str, options: dict[str,Any]) -> None:
+    c : Correlator|CheckPointEvent|None = None
+
+    if options.get('start'):
+        c = Correlator(name, options["start"], options["end"])
+        correlation_rules.append(c)
+    else:
+        c = CheckPointEvent(name, options["event"])
+        c.unique = options.get("unique", c.unique)
+        event_rules.append(c)
+    c.verbose = options.get("debug", c.verbose)
 
 class Correlation:
     def __init__(self, start: LogLine, end: LogLine, source: Correlator):
@@ -51,6 +62,64 @@ class Correlation:
             self.start.text,
             colored("@ %s" % self.start.localtime, "blue"),
         )
+
+
+def extractExtras(startLine: str, extraLines: list[str]) -> list[str]:
+    extras = []
+    brackets = (
+        ("[", "]"),
+        ("{", "}"),
+    )
+    for oB, cB in brackets:
+        diff = startLine.count(oB) - startLine.count(cB)
+        if diff > 0:
+            for e in extraLines:
+                diff += e.count(oB)
+                diff -= e.count(cB)
+                extras.append(e[:-1])
+                if diff <= 0:
+                    break
+    return extras
+
+
+class CheckPointEvent:
+    lookup: dict[LogLine, CheckPointEvent] = {}
+
+    def __init__(self, description: str, event_pat: str):
+        self.description = description
+        self.event = re.compile(".*" + event_pat)
+        self.verbose = False
+        self.count = 0
+        self.unique: bool = False
+        self.instances: list[LogLine] = []
+
+    def ingest(self, log: LogLine) -> None:
+        m = self.event.match(log.text)
+        if m:  # store logline if start matches
+            if self.unique and self.instances and log.text == self.instances[-1].text:
+                return
+            self.count += 1
+            if self.verbose:
+                print(f'Event "{self.description}" found: {log.text}')
+            self.lookup[log] = self
+            self.instances.append(log)
+
+    def summary(self) -> None:
+        if self.instances:
+            print(
+                colored(
+                    "Summary for %s (occurred %d times):" % (self.description, self.count),
+                    "white",
+                    "on_blue",
+                )
+            )
+            for log in self.instances:
+                print(
+                    log.text,
+                    colored("@ %s" % log.timestamp, "blue"),
+                )
+                for extra in extractExtras(log.text, log.extra):
+                    print(" ... " + extra)
 
 
 class Correlator:
@@ -126,3 +195,6 @@ class Correlator:
                 print(cor.pretty)
             for cor in sorted(self.active_items, key=lambda x: x.start.timestamp):
                 print(cor.pretty)
+
+event_rules: list[CheckPointEvent] = []
+correlation_rules: list[Correlator] = []

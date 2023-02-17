@@ -7,6 +7,13 @@ ts_lines_suffix = ""
 # timezone used in dates input by the user
 timezone = "CEST"
 
+["Swap events"]
+event = "systemd-swap.service"
+
+["Failed events"]
+event = "Failed with result"
+unique = true
+
 ["Basic pattern-less correlation"]
 start = "this is the start"
 end = "end over"
